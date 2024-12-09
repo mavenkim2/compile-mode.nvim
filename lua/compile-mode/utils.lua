@@ -134,26 +134,45 @@ function M.split_unless_open(opts, smods, count)
 	local winnrs = vim.fn.win_findbuf(bufnr)
 
 	if #winnrs == 0 then
-		local cmd = "sbuffer " .. bufnr
-		if smods.vertical then
-			cmd = "vert " .. cmd
-		end
+		local value
+		local cmd
+	  	local windows = vim.api.nvim_tabpage_list_wins(0)
+  	  	local win_number = #windows
+  	  	if win_number == 1 then
+			cmd = "sbuffer " .. bufnr
+		else 
+			cmd = "buffer" .. bufnr
+  	  	end
+  	  	local current_win = vim.api.nvim_tabpage_get_win(0)
+  	  	for _, v in ipairs(windows) do
+  	      	if v ~= current_win then
+				value = v
+			  	break
+  	      	end
+  	  	end
 
-		if smods.split and smods.split ~= "" then
-			cmd = smods.split .. " " .. cmd
-		end
+		-- local cmd = "sbuffer " .. bufnr
+		if win_number == 1 then 
+			if smods.vertical then
+				cmd = "vert " .. cmd
+			end
 
-		if smods.tab and smods.tab ~= -1 then
-			cmd = tostring(smods.tab) .. "tab " .. cmd
-		end
+			if smods.split and smods.split ~= "" then
+				cmd = smods.split .. " " .. cmd
+			end
 
-		vim.cmd(cmd)
+			if smods.tab and smods.tab ~= -1 then
+				cmd = tostring(smods.tab) .. "tab " .. cmd
+			end
+			vim.cmd(cmd)
+		else 
+			vim.fn.win_execute(value, cmd)
+		end
 
 		if count ~= 0 and count ~= nil then
 			vim.cmd("resize" .. count)
 		end
 	end
-
 	return bufnr
 end
 
